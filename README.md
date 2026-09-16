@@ -291,7 +291,7 @@ Here’s a step-by-step guide for using this Platform repository along with your
 - Remove the existing `./api-rest` directory contents from local and from git cache
 - Install your desired repository inside `./api-rest`
 - Choose between Git submodule and detached repository approaches
-- The same recommendation goes for `./api-grpc` and `./application`
+- The same recommendation goes for `./api-grpc` and `./application` directories
 
 #### 1. **GIT Detached Repository (Recommended)**
 
