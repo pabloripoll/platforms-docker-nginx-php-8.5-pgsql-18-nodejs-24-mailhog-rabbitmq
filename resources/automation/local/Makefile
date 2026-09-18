@@ -68,17 +68,82 @@ network-destroy: ## destroys network
 	$(DOCKER) network rm $(PROJECT_LEAD)-$(PROJECT_CNET)
 
 # -------------------------------------------------------------------------------------------------
+#  Frontend Application Service
+# -------------------------------------------------------------------------------------------------
+.PHONY: webapp-hostcheck webapp-info webapp-set webapp-create webapp-network webapp-ssh webapp-start webapp-stop webapp-destroy
+
+webapp-hostcheck: ## shows this project ports availability on local machine for the container
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) port-check
+
+webapp-info: ## shows the docker related information
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) info
+
+webapp-set: ## sets the enviroment file to build the container
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) env-set
+
+webapp-build: ## builds and ensures changes in the Dockerfile, build steps, or copied-in files are applied
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) build
+
+webapp-create: ## starts up or creates the container for running in detached mode
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) up
+
+webapp-network: ## starts up into an existing custom network for container-to-container communication, runnning in detached mode
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) clear network
+
+webapp-host-gateway: ## starts up for container-to-host communication, runnning in detached mode
+	$(MAKE) webapp-stop
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) clear host-gateway
+
+webapp-ssh: ## enters the container shell
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) ssh
+
+webapp-start: ## starts the container running
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) start
+
+webapp-stop: ## stops the container but its assets will not be destroyed
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) stop
+
+webapp-restart: ## restarts the running container
+	cd platforms/$(WEBAPP_PLTF) && $(MAKE) restart
+
+webapp-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(WEBAPP_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(WEBAPP_PLTF) && $(MAKE) stop clear destroy; \
+		echo ${C_GRN}"O.K.! $(WEBAPP_PLTF) has been cleared down."${C_END}; \
+	fi
+
+webapp-destroy: ## destroys completly the container
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(WEBAPP_PLTF)"${C_END}" container and delete its image resource."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container has been stopped but not destroyed."${C_END}; \
+    else \
+		cd platforms/$(WEBAPP_PLTF) && $(MAKE) stop clear destroy; \
+		echo -n ${C_GRN}"Do you want to clear DOCKER cache? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+			echo ${C_YEL}"The following command is delegated to be executed by user:"${C_END}; \
+			echo "$$ $(DOCKER) system prune"; \
+		else \
+			$(DOCKER) system prune; \
+			echo ${C_GRN}"O.K.! DOCKER cache has been cleared up."${C_END}; \
+		fi \
+	fi
+
+# -------------------------------------------------------------------------------------------------
 #  Backend API Service
 # -------------------------------------------------------------------------------------------------
 .PHONY: apirest-hostcheck apirest-info apirest-set apirest-create apirest-network apirest-ssh apirest-start apirest-stop apirest-destroy
 
-apirest-hostcheck: ## shows this project ports availability on local machine for the container
+apirest-hostcheck: ## shows this project ports availability on local machine for apirest container
 	cd platforms/$(APIREST_PLTF) && $(MAKE) port-check
 
-apirest-info: ## shows the docker related information
+apirest-info: ## shows the apirest docker related information
 	cd platforms/$(APIREST_PLTF) && $(MAKE) info
 
-apirest-set: ## sets the enviroment file to build the container
+apirest-set: ## sets the apirest enviroment file to build the container
 	cd platforms/$(APIREST_PLTF) && $(MAKE) env-set
 
 apirest-build: ## builds and ensures changes in the Dockerfile, build steps, or copied-in files are applied
@@ -94,19 +159,29 @@ apirest-host-gateway: ## starts up for container-to-host communication, runnning
 	$(MAKE) apirest-stop
 	cd platforms/$(APIREST_PLTF) && $(MAKE) clear host-gateway
 
-apirest-ssh: ## enters the container shell
+apirest-ssh: ## enters the apirest container shell
 	cd platforms/$(APIREST_PLTF) && $(MAKE) ssh
 
-apirest-start: ## starts the container running
+apirest-start: ## starts the apirest container running
 	cd platforms/$(APIREST_PLTF) && $(MAKE) start
 
-apirest-stop: ## stops the container but its assets will not be destroyed
+apirest-stop: ## stops the apirest container but its assets will not be destroyed
 	cd platforms/$(APIREST_PLTF) && $(MAKE) stop
 
-apirest-restart: ## restarts the running container
+apirest-restart: ## restarts the running apirest container
 	cd platforms/$(APIREST_PLTF) && $(MAKE) restart
 
-apirest-destroy: ## destroys completly the container
+apirest-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(APIREST_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(APIREST_PLTF) && $(MAKE) stop clear destroy; \
+		echo ${C_GRN}"O.K.! $(APIREST_PLTF) has been cleared down."${C_END}; \
+	fi
+
+apirest-destroy: ## destroys completly the apirest container
 	echo ${C_RED}"Attention!"${C_END};
 	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(APIREST_PLTF)"${C_END}" container and delete its image resource."${C_END};
 	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
@@ -157,6 +232,16 @@ db-stop: ## stops the database container but its assets will not be destroyed
 db-restart: ## restarts the running database container
 	cd platforms/$(DATABASE_PLTF) && $(MAKE) restart
 
+db-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(DATABASE_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(DATABASE_PLTF) && $(MAKE) stop clear destroy; \
+		echo ${C_GRN}"O.K.! $(DATABASE_PLTF) has been cleared down."${C_END}; \
+	fi
+
 db-destroy: ## destroys completly the database container with its data
 	echo ${C_RED}"Attention!"${C_END};
 	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(DATABASE_PLTF)"${C_END}" container and delete its image resource and persistance data."${C_END};
@@ -202,61 +287,6 @@ db-sql-drop: ## drops the container main database but recreates the database wit
 	cd platforms/$(DATABASE_PLTF) && $(MAKE) sql-drop
 
 # -------------------------------------------------------------------------------------------------
-#  Frontend Application Service
-# -------------------------------------------------------------------------------------------------
-.PHONY: webapp-hostcheck webapp-info webapp-set webapp-create webapp-network webapp-ssh webapp-start webapp-stop webapp-destroy
-
-webapp-hostcheck: ## shows this project ports availability on local machine for the container
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) port-check
-
-webapp-info: ## shows the docker related information
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) info
-
-webapp-set: ## sets the enviroment file to build the container
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) env-set
-
-webapp-build: ## builds and ensures changes in the Dockerfile, build steps, or copied-in files are applied
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) build
-
-webapp-create: ## starts up or creates the container for running in detached mode
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) up
-
-webapp-network: ## starts up into an existing custom network for container-to-container communication, runnning in detached mode
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) clear network
-
-webapp-host-gateway: ## starts up for container-to-host communication, runnning in detached mode
-	$(MAKE) webapp-stop
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) clear host-gateway
-
-webapp-ssh: ## enters the container shell
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) ssh
-
-webapp-start: ## starts the container running
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) start
-
-webapp-stop: ## stops the container but its assets will not be destroyed
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) stop
-
-webapp-restart: ## restarts the running container
-	cd platforms/$(WEBAPP_PLTF) && $(MAKE) restart
-
-webapp-destroy: ## destroys completly the container
-	echo ${C_RED}"Attention!"${C_END};
-	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(WEBAPP_PLTF)"${C_END}" container and delete its image resource."${C_END};
-	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
-        echo ${C_GRN}"K.O.! container has been stopped but not destroyed."${C_END}; \
-    else \
-		cd platforms/$(WEBAPP_PLTF) && $(MAKE) stop clear destroy; \
-		echo -n ${C_GRN}"Do you want to clear DOCKER cache? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
-			echo ${C_YEL}"The following command is delegated to be executed by user:"${C_END}; \
-			echo "$$ $(DOCKER) system prune"; \
-		else \
-			$(DOCKER) system prune; \
-			echo ${C_GRN}"O.K.! DOCKER cache has been cleared up."${C_END}; \
-		fi \
-	fi
-
-# -------------------------------------------------------------------------------------------------
 #  Mailer Service
 # -------------------------------------------------------------------------------------------------
 .PHONY: mailer-hostcheck mailer-info mailer-set mailer-create mailer-network mailer-ssh mailer-start mailer-stop mailer-destroy
@@ -290,6 +320,16 @@ mailer-stop: ## stops the mailer container but its assets will not be destroyed
 
 mailer-restart: ## restarts the running mailer container
 	cd platforms/$(MAILER_PLTF) && $(MAKE) restart
+
+mailer-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(MAILER_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(MAILER_PLTF) && $(MAKE) stop clear destroy; \
+		echo ${C_GRN}"O.K.! $(MAILER_PLTF) has been cleared down."${C_END}; \
+	fi
 
 mailer-destroy: ## destroys completly the mailer container
 	echo ${C_RED}"Attention!"${C_END};
@@ -341,6 +381,16 @@ broker-stop: ## stops the broker container but its assets will not be destroyed
 
 broker-restart: ## restarts the running broker container
 	cd platforms/$(BROKER_PLTF) && $(MAKE) restart
+
+broker-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(BROKER_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"K.O.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(BROKER_PLTF) && $(MAKE) stop clear destroy; \
+		echo ${C_GRN}"O.K.! $(BROKER_PLTF) has been cleared down."${C_END}; \
+	fi
 
 broker-destroy: ## destroys completly the broker container
 	echo ${C_RED}"Attention!"${C_END};

@@ -8,16 +8,16 @@
 [![Open Source? Yes!](https://badgen.net/badge/Open%20Source%20%3F/Yes%21/blue?icon=github)](./)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-# NGINX + PHP 8.5 & POSTGRE 18+ & NODEJS 24
+# NGINX + PHP 8.5 & POSTGRE 18+ + NODE JS 24
 <br>
 
 This Infrastructure Platform repository is designed for back-end projects and provides three separate platforms:
 
 ## Platforms for Full-Stack Project
 
+- APP: [NGINX + NODE JS 24](./platforms/nginx-nodejs-24/README.md)
 - API: [NGINX + PHP 8.5](./platforms/nginx-php-8.5/README.md)
 - Database: [POSTGRE 18+](./platforms/pgsql-18/README.md)
-- Web Application: [NODEJS 24](./platforms/nginx-nodejs-24/README.md)
 - Mail Service: [MAILHOG 1+](./platforms/mailhog-1/README.md)
 - Message Broker: [RABBITMQ 4+](./platforms/rabbitmq-4/README.md)
 <br><br>
@@ -76,6 +76,7 @@ By leveraging Platform Engineering principles, this project reduces cognitive lo
 
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Windows WSL2](https://img.shields.io/badge/Windows-WSL2-4E9A06?style=for-the-badge&logo=windows&logoColor=white)
 ![MacOS](https://img.shields.io/badge/MacOS-f0f0f0?logo=apple&logoColor=black&style=for-the-badge)
 ![gnu](https://img.shields.io/badge/gnu-%23A42E2B.svg?style=for-the-badge&logo=gnu&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
@@ -142,11 +143,6 @@ Once variables set, each Docker platform container environment variables can be 
   $ make db-set
   ```
 
-- Set up the database container
-  ```bash
-  $ make webapp-set
-  ```
-
 - Set up the mail service container
   ```bash
   $ make mailer-set
@@ -166,16 +162,16 @@ $ make apirest-create
 ```
 <br>
 
+Testing container visiting localhost with the assigned port, but with no database connection established or failed because of wrong configuration
+<br>
+
 Create and start up the database container
 ```bash
 $ make db-create
 ```
 <br>
 
-Create and start up the application container
-```bash
-$ make webapp-create
-```
+Once database service is up and running, status message will show successful connection
 <br>
 
 Create and start up the mail service container
@@ -201,7 +197,7 @@ $ sudo docker ps
 
 Despite each container can be stop or restarted, they can be stop and destroy both containers simultaneously to clean up locally from Docker generated cache, without affecting other containers running on the same machine.
 ```bash
-$ yes | make apirest-destroy db-destroy webapp-destroy mailer-destroy broker-destroy
+$ yes | make apirest-destroy db-destroy mailer-destroy broker-destroy
 ```
 <br><br>
 
@@ -210,20 +206,14 @@ $ yes | make apirest-destroy db-destroy webapp-destroy mailer-destroy broker-des
 Repository directories structure overview
 ```sh
 .
-├── api-rest                     # detached repository
+├── api-rest                    # detached repository
 │   ├── src
 │   ├── .env
 │   ├── vendor
 │   └── ...etc
 │
-├── application                  # detached repository
-│   ├── src
-│   ├── .env
-│   ├── vendor
-│   └── ...etc
-│
-├── platforms                    # remote infrastructure platforms
-│   ├── nginx-php-8.5
+├── platforms                   # remote infrastructure platforms
+│   ├── nginx-nodejs-24
 │   │   ├── docker
 │   │   │   ├── config
 │   │   │   ├── .env
@@ -231,7 +221,7 @@ Repository directories structure overview
 │   │   │   └── Dockerfile
 │   │   └── Makefile
 │   │
-│   ├── nginx-nodejs-24
+│   ├── nginx-php-8.5
 │   │   ├── docker
 │   │   │   ├── config
 │   │   │   ├── .env
@@ -282,27 +272,26 @@ Set up platforms
 - Copy `.env.example` to `.env` and adjust settings (rest api port, database port, mail service port, container RAM usage, etc.)
 <br>
 
-### Managing the `api-rest` Directory: Submodule vs Detached Repository
+### Managing the `apirest` Directory: Submodule vs Detached Repository
 
-To remove the `./api-rest` directory with the default installation content and install your desired repository inside it, there are two alternatives for managing both the platform and api-rest repositories independently:
+To remove the `./api-rest` directory with the default installation content and install your desired repository inside it, there are two alternatives for managing both the platform and apirest repositories independently:
 
 Here’s a step-by-step guide for using this Platform repository along with your own REST API repository:
 
 - Remove the existing `./api-rest` directory contents from local and from git cache
 - Install your desired repository inside `./api-rest`
 - Choose between Git submodule and detached repository approaches
-- The same recommendation goes for `./api-grpc` and `./application` directories
 
 #### 1. **GIT Detached Repository (Recommended)**
 
 > Git commands can be executed **whether from inside the container or on the local machine**.
 
-- Remove `api-rest` from local and git cache:
+- Remove `apirest` from local and git cache:
   ```bash
-  $ git rm -r --cached -- "api-rest/*" ":(exclude)api-rest/.gitkeep"
+  $ git rm -r --cached -- "apirest/*" ":(exclude)apirest/.gitkeep"
   $ git clean -fd
   $ git reset --hard
-  $ git commit -m "maint: api-rest directory and its default installation removed"
+  $ git commit -m "maint: apirest directory and its default installation removed"
   ```
 
 - Clone the desired repository as a detached repository:
@@ -310,24 +299,24 @@ Here’s a step-by-step guide for using this Platform repository along with your
   $ git clone git@[vcs]:[account]/[repository].git ./api-rest
   ```
 
-- The `./api-rest` directory is now an **independent repository**, not tracked as a submodule in your main repo. You can use `git` commands freely inside `api-rest` from anywhere.
+- The `./api-rest` directory is now an **independent repository**, not tracked as a submodule in your main repo. You can use `git` commands freely inside `apirest` from anywhere.
 <br>
 
 #### 2. **GIT Sub-module**
 
 > Git commands can be executed **only from inside the container**.
 
-- Remove `api-rest` from local and git cache:
+- Remove `apirest` from local and git cache:
   ```bash
   $ rm -rfv ./api-rest/* ./api-rest/.[!.]*$
-  $ git rm -r --cached api-rest
-  $ git commit -m "maint: api-rest directory and its default installation removed"
+  $ git rm -r --cached apirest
+  $ git commit -m "maint: apirest directory and its default installation removed"
   ```
 
 - Add the desired repository as a submodule:
   ```bash
   $ git submodule add git@[vcs]:[account]/[repository].git ./api-rest
-  $ git commit -m "maint: api-rest as a git submodule added"
+  $ git commit -m "maint: apirest as a git submodule added"
   ```
 
 - To update submodule contents:
